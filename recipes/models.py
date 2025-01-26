@@ -6,8 +6,11 @@ import re
 import openai
 import os
 from dotenv import load_dotenv
+from logging import getLogger
 
 load_dotenv()
+
+logger = getLogger(__name__)
 
 
 class Category(models.Model):
@@ -106,11 +109,15 @@ class ScannedRecipe(models.Model):
         try:
             client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-            prompt = """
+            # Get all category names first
+            category_names = ", ".join([cat.name for cat in Category.objects.all()])
+            
+            prompt = f"""
             Przeanalizuj zdjęcie przepisu kulinarnego i zwróć informacje w formacie JSON. Odpowiedz dokładnie w tym formacie, bez żadnego dodatkowego tekstu:
-            {
+            {{
                 "name": "Nazwa przepisu",
                 "description": "Krótki opis przepisu",
+                "categories": ["Lista kategorii do których należy przepis, dostępne opcje: {category_names}"], 
                 "prep_time": liczba (w minutach),
                 "cook_time": liczba (w minutach),
                 "idle_time": liczba (w minutach),
@@ -127,7 +134,7 @@ class ScannedRecipe(models.Model):
                 "nutrition": "Informacje o wartościach odżywczych",
                 "equipment": "Potrzebne naczynia i sprzęt",
                 "source": "Źródło przepisu (jeśli podane)"
-            }
+            }}
 
             Jeśli jakieś pole nie jest dostępne w przepisie, zostaw null. Dla pól czasowych użyj liczb całkowitych (w minutach).
             Nie dodawaj żadnych komentarzy ani dodatkowego tekstu przed lub po JSONie.
@@ -171,7 +178,7 @@ class ScannedRecipe(models.Model):
             self.save()
 
         except Exception as e:
-            print(f"Error during OpenAI analysis: {str(e)}")
+            logger.error(f"Error during OpenAI analysis: {str(e)}", exc_info=True)
             raise
 
     def _get_image_base64(self):
@@ -202,7 +209,7 @@ class ScannedRecipe(models.Model):
                 recipe_data = json.loads(text_to_parse)
 
             # Utwórz przepis ze wszystkimi dostępnymi polami
-            return Recipe.objects.create(
+            recipe = Recipe.objects.create(
                 name=recipe_data.get("name", "Nowy przepis"),
                 description=recipe_data.get("description"),
                 prep_time=recipe_data.get("prep_time"),
@@ -217,6 +224,14 @@ class ScannedRecipe(models.Model):
                 equipment=recipe_data.get("equipment"),
                 source=recipe_data.get("source"),
             )
+
+            # Dodaj kategorie
+            categories = recipe_data.get("categories", [])
+            for category_name in categories:
+                category, _ = Category.objects.get_or_create(name=category_name)
+                recipe.categories.add(category)
+
+            return recipe
 
         except Exception as e:
             print(f"Error creating recipe: {str(e)}")
