@@ -1,0 +1,35 @@
+@media (max-width: 640px) {
+    .group:hover .group-hover\:block {
+        display: block;
+        position: fixed;
+        top: 3.5rem; /* 56px */
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        z-index: 50;
+    }
+} 
+
+/* Form styles */
+input[type="text"],
+input[type="number"],
+input[type="url"],
+input[type="file"],
+textarea,
+select {
+    @apply w-full border-2 border-gray-200 rounded-lg p-2 focus:outline-none focus:border-blue-500 bg-gray-50;
+}
+
+select[multiple] {
+    @apply h-32;
+}
+
+textarea {
+    @apply h-24;
+}
+
+/* Style for select2 if you're using it */
+.select2-container .select2-selection--multiple {
+    @apply border border-gray-300 rounded-lg;
+    min-height: 38px;
+} 
