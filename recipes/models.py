@@ -1,7 +1,5 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-import pytesseract
-from PIL import Image, ImageEnhance
 import re
 import openai
 import os

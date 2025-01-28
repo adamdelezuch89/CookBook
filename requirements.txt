@@ -1,5 +1,5 @@
 Django>=5.0
 Pillow>=10.0  # for image handling
-pytesseract>=0.3.10  # for OCR
 python-dotenv>=1.0.0  # for environment variables
 openai>=1.0.0
+gunicorn==21.2.0
